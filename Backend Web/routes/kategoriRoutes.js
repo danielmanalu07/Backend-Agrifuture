@@ -6,13 +6,13 @@ const {
   getKategoriById,
   getAllKategori,
 } = require('../controllers/kategoriController');
-const { authMiddleware, sellerOnly } = require('../middleware/authMiddleware');
+const { authMiddleware, adminOnly } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-router.post('/tambah', authMiddleware, sellerOnly, addKategori); 
-router.delete('/hapus/:id', authMiddleware, sellerOnly, deleteKategori); 
-router.put('/edit/:id', authMiddleware, sellerOnly, updateKategori); 
+router.post('/tambah', authMiddleware, adminOnly, addKategori); 
+router.delete('/hapus/:id', authMiddleware, adminOnly, deleteKategori); 
+router.put('/edit/:id', authMiddleware, adminOnly, updateKategori); 
 router.get('/:id', authMiddleware, getKategoriById);
 router.get('/', authMiddleware, getAllKategori);
 

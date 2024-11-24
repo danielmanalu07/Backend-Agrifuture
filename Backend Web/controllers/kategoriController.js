@@ -2,10 +2,10 @@ const pool = require('../config/database');
 
 exports.addKategori = async (req, res) => {
   const { name } = req.body;
-  const sellerId = req.user.id; // Mendapatkan seller_id dari pengguna yang sedang login
+  const adminId = req.user.id; // Mendapatkan admin_id dari pengguna yang sedang login
 
   try {
-    const [result] = await pool.query('INSERT INTO categories (name, seller_id) VALUES (?, ?)', [name, sellerId]);
+    const [result] = await pool.query('INSERT INTO categories (name, admin_id) VALUES (?, ?)', [name, adminId]);
     res.status(201).json({ message: 'Kategori created', kategoriId: result.insertId });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -14,11 +14,11 @@ exports.addKategori = async (req, res) => {
 
 exports.deleteKategori = async (req, res) => {
   const { id } = req.params;
-  const sellerId = req.user.id; // Mendapatkan seller_id dari pengguna yang sedang login
+  const adminId = req.user.id; // Mendapatkan admin_id dari pengguna yang sedang login
 
   try {
-    // Cek apakah kategori yang ingin dihapus milik seller yang sedang login
-    const [kategori] = await pool.query('SELECT * FROM categories WHERE id = ? AND seller_id = ?', [id, sellerId]);
+    // Cek apakah kategori yang ingin dihapus milik admin yang sedang login
+    const [kategori] = await pool.query('SELECT * FROM categories WHERE id = ? AND admin_id = ?', [id, adminId]);
     if (!kategori.length) {
       return res.status(404).json({ message: 'Kategori not found or not authorized' });
     }
@@ -39,11 +39,11 @@ exports.deleteKategori = async (req, res) => {
 exports.updateKategori = async (req, res) => {
   const { id } = req.params;
   const { name } = req.body;
-  const sellerId = req.user.id; // Mendapatkan seller_id dari pengguna yang sedang login
+  const adminId = req.user.id; // Mendapatkan admin_id dari pengguna yang sedang login
 
   try {
-    // Cek apakah kategori yang ingin diupdate milik seller yang sedang login
-    const [kategori] = await pool.query('SELECT * FROM categories WHERE id = ? AND seller_id = ?', [id, sellerId]);
+    // Cek apakah kategori yang ingin diupdate milik admin yang sedang login
+    const [kategori] = await pool.query('SELECT * FROM categories WHERE id = ? AND admin_id = ?', [id, adminId]);
     if (!kategori.length) {
       return res.status(404).json({ message: 'Kategori not found or not authorized' });
     }

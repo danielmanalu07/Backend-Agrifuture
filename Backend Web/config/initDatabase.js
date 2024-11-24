@@ -28,8 +28,8 @@ const createTables = async () => {
       CREATE TABLE IF NOT EXISTS categories (
         id INT PRIMARY KEY AUTO_INCREMENT,
         name VARCHAR(100) NOT NULL,
-        seller_id INT,
-        FOREIGN KEY (seller_id) REFERENCES users(id),
+        admin_id INT,
+        FOREIGN KEY (admin_id) REFERENCES users(id),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       );

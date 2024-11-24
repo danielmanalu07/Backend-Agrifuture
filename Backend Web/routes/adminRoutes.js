@@ -1,21 +1,21 @@
+// adminRoutes.js
 const express = require('express');
 const { 
   updateSellerApproval, 
   getSellerById, 
-  getAllSellers, 
-  loginAdmin, 
-  logoutAdmin 
+  getAllSellers 
 } = require('../controllers/adminController');
 const { authMiddleware, adminOnly } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-// Login dan Logout Admin
-router.post('/login', loginAdmin);
-router.post('/logout', authMiddleware, adminOnly, logoutAdmin);
-
+// Update approval status seller
 router.put('/approve/seller/:id', authMiddleware, adminOnly, updateSellerApproval);
+
+// Get seller by ID
 router.get('/seller/:id', authMiddleware, adminOnly, getSellerById);
-router.get('/seller', authMiddleware, adminOnly, getAllSellers);
+
+// Get all sellers
+router.get('/sellers', authMiddleware, adminOnly, getAllSellers);
 
 module.exports = router;

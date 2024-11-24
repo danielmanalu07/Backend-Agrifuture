@@ -18,10 +18,7 @@ exports.authMiddleware = (req, res, next) => {
 };
 
 exports.adminOnly = (req, res, next) => {
-  const adminUsername = "admin"; 
-
-  // Cek jika yang login adalah admin
-  if (req.user.username !== adminUsername) {
+  if (req.user.role !== 'admin') {
     return res.status(403).json({ message: 'Access denied' });
   }
   next();
