@@ -8,22 +8,18 @@ require("dotenv").config();
 exports.register = async (req, res) => {
   const { name, store_name, phone, address, birth_date, email, gender, username, password } = req.body;
   try {
-    // Check if username already exists
     const [existingUser] = await pool.query("SELECT * FROM users WHERE username = ?", [username]);
     if (existingUser.length) {
       return res.status(400).json({ message: "Username already taken" });
     }
 
-    // Check if email already exists
     const [existingEmail] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
     if (existingEmail.length) {
       return res.status(400).json({ message: "Email already in use" });
     }
 
-    // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Insert new user into the users table
     const [result] = await pool.query(
       "INSERT INTO users (name, store_name, phone, address, birth_date, email, gender, username, password, role, approved) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
       [
@@ -50,27 +46,92 @@ exports.register = async (req, res) => {
 // Login
 exports.login = async (req, res) => {
   const { username, password } = req.body;
+
   try {
-    const [user] = await pool.query("SELECT * FROM users WHERE username = ?", [username]);
-    if (!user.length || !(await bcrypt.compare(password, user[0].password)) || !user[0].approved) {
-      return res.status(401).json({ message: "Invalid credentials or user not approved" });
+    // Cari pengguna berdasarkan username
+    const [users] = await pool.query("SELECT * FROM users WHERE username = ?", [username]);
+
+    // Jika username tidak ditemukan
+    if (!users.length) {
+      return res.status(401).json({ message: "Invalid username or password" });
     }
 
-    // Generate JWT token
+    const user = users[0];
+
+    // Verifikasi password
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid || !user.approved) {
+      return res.status(401).json({ message: "Invalid username or password" });
+    }
+
+    // Buat token JWT
     const token = jwt.sign(
-      { id: user[0].id, role: user[0].role },
+      { id: user.id, role: user.role }, // Sertakan role dalam payload JWT
       process.env.JWT_SECRET,
-      { expiresIn: "1d" }
+      { expiresIn: "1d" } // Token berlaku selama 1 hari
     );
 
-    res.status(200).json({ token });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+    // Kirim respons dengan token dan role
+    res.status(200).json({
+      success: true,
+      token,
+      role: user.role, // Tambahkan role ke respons
+      username: user.username // Opsional, jika username diperlukan
+    });
+  } catch (error) {
+    console.error("Error during login:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
 // Logout
 exports.logout = (req, res) => {
-  res.clearCookie('token'); // Clear token from client-side (cookie, localStorage, etc.)
-  res.status(200).json({ message: 'Logout successful' });
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ message: "Token not provided" });
+  }
+
+  try {
+    // Verifikasi token
+    jwt.verify(token, process.env.JWT_SECRET);
+    
+    // Jika token valid, proses logout
+    res.status(200).json({ message: "Logout successful" });
+  } catch (err) {
+    res.status(403).json({ message: "Invalid or expired token" });
+  }
+};
+
+exports.getProfile = async (req, res) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const [users] = await pool.query("SELECT * FROM users WHERE id = ?", [decoded.id]);
+
+    if (!users.length) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const user = users[0];
+    res.status(200).json({
+      username: user.username,
+      email: user.email,
+      phone: user.phone,
+      address: user.address,
+      age: user.age,
+      gender: user.gender,
+      joinedDate: user.joined_date,
+    });
+  } catch (error) {
+    console.error("Error fetching profile:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 };

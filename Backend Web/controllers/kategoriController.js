@@ -69,9 +69,20 @@ exports.getKategoriById = async (req, res) => {
 
 exports.getAllKategori = async (req, res) => {
   try {
-    const [kategori] = await pool.query('SELECT * FROM categories');
-    res.status(200).json({ kategori });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+    const [rows] = await pool.query(`
+      SELECT id, name, created_at, updated_at 
+      FROM categories
+    `);
+
+    res.status(200).json({
+      success: true,
+      kategori: rows,
+    });
+  } catch (error) {
+    console.error("Get Categories Error:", error.message);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };

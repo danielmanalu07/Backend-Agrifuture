@@ -1,19 +1,18 @@
 const express = require('express');
-const {
-  addKategori,
-  deleteKategori,
-  updateKategori,
-  getKategoriById,
-  getAllKategori,
+const router = express.Router();
+const { 
+  getAllKategori, 
+  getKategoriById, 
+  addKategori, 
+  updateKategori, 
+  deleteKategori 
 } = require('../controllers/kategoriController');
 const { authMiddleware, adminOnly } = require('../middleware/authMiddleware');
 
-const router = express.Router();
-
-router.post('/tambah', authMiddleware, adminOnly, addKategori); 
-router.delete('/hapus/:id', authMiddleware, adminOnly, deleteKategori); 
-router.put('/edit/:id', authMiddleware, adminOnly, updateKategori); 
-router.get('/:id', authMiddleware, getKategoriById);
 router.get('/', authMiddleware, getAllKategori);
+router.get('/:id', authMiddleware, getKategoriById);
+router.post('/tambah', authMiddleware, adminOnly, addKategori);
+router.put('/edit/:id', authMiddleware, adminOnly, updateKategori);
+router.delete('/hapus/:id', authMiddleware, adminOnly, deleteKategori);
 
 module.exports = router;

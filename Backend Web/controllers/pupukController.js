@@ -73,10 +73,21 @@ exports.getPupukById = async (req, res) => {
 
 exports.getAllPupuk = async (req, res) => {
   try {
-    const [fertilizer] = await pool.query('SELECT * FROM fertilizers');
-    res.status(200).json({ fertilizer });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+    // Mengambil semua produk dari tabel fertilizers
+    const [products] = await pool.query('SELECT * FROM fertilizers');
+
+    console.log("Products found:", products); // Debugging: Cek apakah produk ada
+
+    if (products.length === 0) {
+      return res.status(404).json({ message: "Tidak ada produk yang ditemukan" });
+    }
+
+    // Mengembalikan data produk dalam format JSON
+    return res.status(200).json(products);
+  } catch (error) {
+    console.error("Error getting products:", error);
+    return res.status(500).json({ message: "Terjadi kesalahan server" });
   }
 };
+
 

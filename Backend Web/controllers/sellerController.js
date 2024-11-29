@@ -1,5 +1,7 @@
 // SellerController.js
 const sellerModel = require('../models/userModel'); // Importing user model
+const jwt = require('jsonwebtoken');
+const pool = require('../config/database');
 
 // Update seller profile
 exports.updateSellerProfile = async (req, res) => {
@@ -39,3 +41,4 @@ exports.updateSellerProfile = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
+

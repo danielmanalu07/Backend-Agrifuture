@@ -10,4 +10,7 @@ router.post('/register', register)
 // Route to update seller profile (authentication required)
 router.put('/edit-profile', authMiddleware, upload.single('profile_pic'), updateSellerProfile);
 
+// Route to get seller profile (authentication required)
+
+
 module.exports = router;
