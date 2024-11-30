@@ -7,6 +7,8 @@ const authRoutes = require('./routes/authRoutes');
 const sellerRoutes = require('./routes/sellerRoutes');
 const kategoriRoutes = require('./routes/kategoriRoutes');
 const pupukRoutes = require('./routes/pupukRoutes');
+const path = require('path');
+
 
 // Inisialisasi database
 initializeDatabase();
@@ -30,6 +32,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/seller', sellerRoutes);
 app.use('/api/kategori', kategoriRoutes);
 app.use('/api/pupuk', pupukRoutes);
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 
 // Error Handling Middleware untuk route yang tidak ditemukan
 app.use((req, res, next) => {

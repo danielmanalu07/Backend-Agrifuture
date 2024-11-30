@@ -50,6 +50,6 @@ router.put(
 router.get('/:id', authMiddleware, getPupukById);
 
 // Get All Pupuk
-router.get('/', getAllPupuk);
+router.get('/',authMiddleware, getAllPupuk);
 
 module.exports = router;

@@ -73,8 +73,18 @@ exports.getPupukById = async (req, res) => {
 
 exports.getAllPupuk = async (req, res) => {
   try {
-    // Mengambil semua produk dari tabel fertilizers
-    const [products] = await pool.query('SELECT * FROM fertilizers');
+    const { role, id: userId } = req.user; // Ambil role dan ID user dari middleware autentikasi
+
+    let query = 'SELECT * FROM fertilizers';
+    let queryParams = [];
+
+    // Jika role adalah seller, filter berdasarkan user_id
+    if (role === 'seller') {
+      query += ' WHERE seller_id = ?';
+      queryParams.push(userId);
+    }
+
+    const [products] = await pool.query(query, queryParams);
 
     console.log("Products found:", products); // Debugging: Cek apakah produk ada
 
@@ -82,7 +92,6 @@ exports.getAllPupuk = async (req, res) => {
       return res.status(404).json({ message: "Tidak ada produk yang ditemukan" });
     }
 
-    // Mengembalikan data produk dalam format JSON
     return res.status(200).json(products);
   } catch (error) {
     console.error("Error getting products:", error);
