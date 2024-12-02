@@ -1,22 +1,68 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
-const KategoriPupuk = require('./kategoriPupuk');
+const pool = require('../config/database');
 
-const Pupuk = sequelize.define('Pupuk', {
-  nama: { type: DataTypes.STRING, allowNull: false },
-  deskripsi: { type: DataTypes.TEXT },
-  harga: { type: DataTypes.FLOAT, allowNull: false },
-  gambar: { type: DataTypes.STRING },
-  kategoriId: {
-    type: DataTypes.INTEGER,
-    references: {
-      model: KategoriPupuk,
-      key: 'id',
-    },
-  },
-});
+// Tambah pupuk
+exports.createFertilizer = async (data) => {
+  const query = `
+    INSERT INTO fertilizers (name, description, price, category_id, seller_id, image_path, stock) 
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `;
+  const values = [
+    data.name,
+    data.description,
+    data.price,
+    data.category_id,
+    data.seller_id,
+    data.image_path,
+    data.stock || 0,
+  ];
+  const [result] = await pool.query(query, values);
+  return result.insertId;
+};
 
-Pupuk.belongsTo(KategoriPupuk, { foreignKey: 'kategoriId' });
-KategoriPupuk.hasMany(Pupuk, { foreignKey: 'kategoriId' });
+// Update pupuk
+exports.updateFertilizer = async (id, data) => {
+  const fields = [];
+  const values = [];
 
-module.exports = Pupuk;
+  Object.entries(data).forEach(([key, value]) => {
+    if (value !== undefined) {
+      fields.push(`${key} = ?`);
+      values.push(value);
+    }
+  });
+
+  if (fields.length === 0) {
+    throw new Error('No fields to update');
+  }
+
+  const query = `
+    UPDATE fertilizers 
+    SET ${fields.join(', ')}, updated_at = CURRENT_TIMESTAMP 
+    WHERE id = ?
+  `;
+
+  values.push(id);
+  const [result] = await pool.query(query, values);
+  return result.affectedRows > 0;
+};
+
+// Ambil semua pupuk
+exports.getAllFertilizers = async () => {
+  const query = 'SELECT * FROM fertilizers';
+  const [rows] = await pool.query(query);
+  return rows;
+};
+
+// Ambil pupuk berdasarkan ID
+exports.getFertilizerById = async (id) => {
+  const query = 'SELECT * FROM fertilizers WHERE id = ?';
+  const [rows] = await pool.query(query, [id]);
+  return rows[0];
+};
+
+// Hapus pupuk
+exports.deleteFertilizer = async (id) => {
+  const query = 'DELETE FROM fertilizers WHERE id = ?';
+  const [result] = await pool.query(query, [id]);
+  return result.affectedRows > 0;
+};

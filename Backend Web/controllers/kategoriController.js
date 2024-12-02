@@ -1,88 +1,72 @@
-const pool = require('../config/database');
+const KategoriPupuk = require('../models/kategoriPupuk');
 
 exports.addKategori = async (req, res) => {
   const { name } = req.body;
-  const adminId = req.user.id; // Mendapatkan admin_id dari pengguna yang sedang login
+  const imagePath = req.file ? req.file.path : null;
+  const adminId = req.user.id;
 
   try {
-    const [result] = await pool.query('INSERT INTO categories (name, admin_id) VALUES (?, ?)', [name, adminId]);
-    res.status(201).json({ message: 'Kategori created', kategoriId: result.insertId });
+    if (!name) {
+      return res.status(400).json({ message: 'Name is required' });
+    }
+
+    const kategori = await KategoriPupuk.create({
+      name,
+      adminId,
+      imagePath,
+    });
+
+    res.status(201).json({ message: 'Kategori created successfully', kategori });
   } catch (err) {
+    if (err.code === 'ER_DUP_ENTRY') {
+      return res.status(400).json({ message: 'Kategori name must be unique' });
+    }
     res.status(500).json({ message: err.message });
   }
 };
 
 exports.deleteKategori = async (req, res) => {
   const { id } = req.params;
-  const adminId = req.user.id; // Mendapatkan admin_id dari pengguna yang sedang login
+  const adminId = req.user.id;
 
   try {
-    // Cek apakah kategori yang ingin dihapus milik admin yang sedang login
-    const [kategori] = await pool.query('SELECT * FROM categories WHERE id = ? AND admin_id = ?', [id, adminId]);
-    if (!kategori.length) {
-      return res.status(404).json({ message: 'Kategori not found or not authorized' });
-    }
-
-    // Hapus kategori
-    const [result] = await pool.query('DELETE FROM categories WHERE id = ?', [id]);
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: 'Kategori not found' });
-    }
-
-    res.status(200).json({ message: 'Kategori deleted' });
+    await KategoriPupuk.deleteById(id, adminId);
+    res.status(200).json({ message: 'Kategori deleted successfully' });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(404).json({ message: err.message });
   }
 };
-
 
 exports.updateKategori = async (req, res) => {
   const { id } = req.params;
   const { name } = req.body;
-  const adminId = req.user.id; // Mendapatkan admin_id dari pengguna yang sedang login
+  const imagePath = req.file ? req.file.path : null;
+  const adminId = req.user.id;
 
   try {
-    // Cek apakah kategori yang ingin diupdate milik admin yang sedang login
-    const [kategori] = await pool.query('SELECT * FROM categories WHERE id = ? AND admin_id = ?', [id, adminId]);
-    if (!kategori.length) {
-      return res.status(404).json({ message: 'Kategori not found or not authorized' });
-    }
-
-    // Update kategori
-    await pool.query('UPDATE categories SET name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [name || kategori[0].name, id]);
-    res.status(200).json({ message: 'Kategori updated' });
+    await KategoriPupuk.updateById(id, { name, adminId, imagePath });
+    res.status(200).json({ message: 'Kategori updated successfully' });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(404).json({ message: err.message });
   }
 };
 
 exports.getKategoriById = async (req, res) => {
   const { id } = req.params;
+
   try {
-    const [kategori] = await pool.query('SELECT * FROM categories WHERE id = ?', [id]);
-    if (!kategori.length) return res.status(404).json({ message: 'Kategori not found' });
-    res.status(200).json({ kategori: kategori[0] });
+    const kategori = await KategoriPupuk.findById(id);
+    res.status(200).json({ kategori });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(404).json({ message: err.message });
   }
 };
 
 exports.getAllKategori = async (req, res) => {
   try {
-    const [rows] = await pool.query(`
-      SELECT id, name, created_at, updated_at 
-      FROM categories
-    `);
-
-    res.status(200).json({
-      success: true,
-      kategori: rows,
-    });
-  } catch (error) {
-    console.error("Get Categories Error:", error.message);
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    const kategori = await KategoriPupuk.findAll();
+    res.status(200).json({ success: true, kategori });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };

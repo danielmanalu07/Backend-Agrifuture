@@ -27,8 +27,9 @@ const createTables = async () => {
     await pool.query(`
       CREATE TABLE IF NOT EXISTS categories (
         id INT PRIMARY KEY AUTO_INCREMENT,
-        name VARCHAR(100) NOT NULL,
+        name VARCHAR(100) NOT NULL UNIQUE,
         admin_id INT,
+        image_path VARCHAR(255) NOT NULL,
         FOREIGN KEY (admin_id) REFERENCES users(id),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -38,18 +39,19 @@ const createTables = async () => {
     // Tabel pupuk
     await pool.query(`
       CREATE TABLE IF NOT EXISTS fertilizers (
-        id INT PRIMARY KEY AUTO_INCREMENT,
-        name VARCHAR(100) NOT NULL,
-        description TEXT,
-        price DECIMAL(10, 2) NOT NULL,
-        category_id INT,
-        seller_id INT,
-        image_path VARCHAR(255) NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (category_id) REFERENCES categories(id),
-        FOREIGN KEY (seller_id) REFERENCES users(id)
-      );
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    price DECIMAL(10, 2) NOT NULL,
+    category_id INT,
+    seller_id INT,
+    image_path VARCHAR(255) NOT NULL,
+    stock INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (category_id) REFERENCES categories(id),
+    FOREIGN KEY (seller_id) REFERENCES users(id)
+);
     `);
 
     console.log("Database tables created or already exist.");
@@ -61,7 +63,7 @@ const createTables = async () => {
 const seedAdmin = async () => {
   const username = "admin";
   const name = "admin agrifuture";
-  const password = await bcrypt.hash("admin123", 10);  
+  const password = await bcrypt.hash("admin123", 10);
 
   try {
     const result = await pool.query(

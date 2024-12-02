@@ -1,102 +1,85 @@
-const pool = require('../config/database');
+const {
+  createFertilizer,
+  updateFertilizer,
+  getAllFertilizers,
+  getFertilizerById,
+  deleteFertilizer,
+} = require('../models/pupuk');
 
-exports.addPupuk = async (req, res) => {
-  const { name, description, price, category_id } = req.body;
-  const imagePath = req.file ? req.file.filename : null;
-  const sellerId = req.user.id; // Mendapatkan seller_id dari pengguna yang sedang login
+exports.addFertilizer = async (req, res) => {
+  const { name, description, price, category_id, stock } = req.body;
+  const seller_id = req.user.id;
+  const image_path = req.file ? `/uploads/${req.file.filename}` : null;
 
   try {
-    const [category] = await pool.query('SELECT * FROM categories WHERE id = ?', [category_id]);
-    if (!category.length) return res.status(404).json({ message: 'Category not found' });
-
-    const [result] = await pool.query(
-      'INSERT INTO fertilizers (name, description, price, image_path, category_id, seller_id) VALUES (?, ?, ?, ?, ?, ?)',
-      [name, description, price, imagePath, category_id, sellerId]
-    );
-    res.status(201).json({ message: 'Fertilizer created', fertilizerId: result.insertId });
+    const id = await createFertilizer({ name, description, price, category_id, seller_id, image_path, stock });
+    res.status(201).json({ message: 'Fertilizer created', fertilizerId: id });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-exports.deletePupuk = async (req, res) => {
+exports.updateFertilizer = async (req, res) => {
   const { id } = req.params;
-  const sellerId = req.user.id; 
+  const { name, description, price, category_id, stock } = req.body;
+  const image_path = req.file ? `/uploads/${req.file.filename}` : null;
 
   try {
-    const [fertilizer] = await pool.query('SELECT * FROM fertilizers WHERE id = ? AND seller_id = ?', [id, sellerId]);
-    if (!fertilizer.length) return res.status(404).json({ message: 'Fertilizer not found or not authorized' });
+    const currentFertilizer = await getFertilizerById(id);
+    if (!currentFertilizer) {
+      return res.status(404).json({ message: 'Fertilizer not found' });
+    }
 
-    const [result] = await pool.query('DELETE FROM fertilizers WHERE id = ?', [id]);
-    if (result.affectedRows === 0) return res.status(404).json({ message: 'Fertilizer not found' });
-    
-    res.status(200).json({ message: 'Fertilizer deleted' });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
+    const updated = await updateFertilizer(id, {
+      name: name || currentFertilizer.name,
+      description: description || currentFertilizer.description,
+      price: price || currentFertilizer.price,
+      category_id: category_id || currentFertilizer.category_id,
+      stock: stock || currentFertilizer.stock,
+      image_path: image_path || currentFertilizer.image_path,
+    });
 
-exports.updatePupuk = async (req, res) => {
-  const { id } = req.params;
-  const { name, description, price, categoryId } = req.body;
-  const imagePath = req.file ? req.file.filename : null;
-  const sellerId = req.user.id; 
+    if (!updated) {
+      return res.status(404).json({ message: 'Fertilizer not found or not authorized' });
+    }
 
-  try {
-    // Cek apakah pupuk yang ingin diupdate milik seller yang sedang login
-    const [fertilizer] = await pool.query('SELECT * FROM fertilizers WHERE id = ? AND seller_id = ?', [id, sellerId]);
-    if (!fertilizer.length) return res.status(404).json({ message: 'Fertilizer not found or not authorized' });
-
-    const [category] = await pool.query('SELECT * FROM categories WHERE id = ?', [categoryId]);
-    if (categoryId && !category.length) return res.status(404).json({ message: 'Category not found' });
-
-    await pool.query(
-      'UPDATE fertilizers SET name = ?, description = ?, price = ?, image_path = ?, category_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-      [name || fertilizer[0].name, description || fertilizer[0].description, price || fertilizer[0].price, imagePath || fertilizer[0].image_path, categoryId || fertilizer[0].category_id, id]
-    );
     res.status(200).json({ message: 'Fertilizer updated' });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-exports.getPupukById = async (req, res) => {
-  const { id } = req.params;
+exports.getAllFertilizers = async (req, res) => {
   try {
-    const [fertilizer] = await pool.query('SELECT * FROM fertilizers WHERE id = ?', [id]);
-    if (!fertilizer.length) return res.status(404).json({ message: 'Fertilizer not found' });
-    res.status(200).json({ fertilizer: fertilizer[0] });
+    const fertilizers = await getAllFertilizers();
+    res.status(200).json(fertilizers);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-exports.getAllPupuk = async (req, res) => {
+exports.getFertilizerById = async (req, res) => {
+  const { id } = req.params;
   try {
-    const { role, id: userId } = req.user; // Ambil role dan ID user dari middleware autentikasi
-
-    let query = 'SELECT * FROM fertilizers';
-    let queryParams = [];
-
-    // Jika role adalah seller, filter berdasarkan user_id
-    if (role === 'seller') {
-      query += ' WHERE seller_id = ?';
-      queryParams.push(userId);
+    const fertilizer = await getFertilizerById(id);
+    if (!fertilizer) {
+      return res.status(404).json({ message: 'Fertilizer not found' });
     }
-
-    const [products] = await pool.query(query, queryParams);
-
-    console.log("Products found:", products); // Debugging: Cek apakah produk ada
-
-    if (products.length === 0) {
-      return res.status(404).json({ message: "Tidak ada produk yang ditemukan" });
-    }
-
-    return res.status(200).json(products);
-  } catch (error) {
-    console.error("Error getting products:", error);
-    return res.status(500).json({ message: "Terjadi kesalahan server" });
+    res.status(200).json(fertilizer);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };
 
-
+exports.deleteFertilizer = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const deleted = await deleteFertilizer(id);
+    if (!deleted) {
+      return res.status(404).json({ message: 'Fertilizer not found' });
+    }
+    res.status(200).json({ message: 'Fertilizer deleted' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
