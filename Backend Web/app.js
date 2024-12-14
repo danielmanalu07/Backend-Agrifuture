@@ -7,7 +7,9 @@ const authRoutes = require('./routes/authRoutes');
 const sellerRoutes = require('./routes/sellerRoutes');
 const kategoriRoutes = require('./routes/kategoriRoutes');
 const pupukRoutes = require('./routes/pupukRoutes');
+const customerRoutes = require('./routes/customerRoutes');
 const path = require('path');
+const bodyParser = require('body-parser');
 
 
 // Inisialisasi database
@@ -22,7 +24,6 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
-// Middleware untuk parsing JSON dan URL-encoded data
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -32,12 +33,16 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/seller', sellerRoutes);
 app.use('/api/kategori', kategoriRoutes);
 app.use('/api/pupuk', pupukRoutes);
+app.use('/api/customer', customerRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 
-// Error Handling Middleware untuk route yang tidak ditemukan
+
+
 app.use((req, res, next) => {
   res.status(404).json({ message: 'Endpoint not found!' });
 });
+
+
 
 // Jalankan server
 app.listen(process.env.PORT, () => {

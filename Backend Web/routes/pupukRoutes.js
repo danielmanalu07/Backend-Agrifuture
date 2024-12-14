@@ -8,6 +8,7 @@ const {
   getAllFertilizers,
   getFertilizerById,
   deleteFertilizer,
+  addStock,
 } = require('../controllers/pupukController');
 const { authMiddleware, sellerOnly } = require('../middleware/authMiddleware');
 const upload = require('../middleware/uploadMiddleware');
@@ -19,6 +20,7 @@ router.put('/edit/:id', authMiddleware, sellerOnly, upload.single('image_path'),
 router.get('/', getAllFertilizers);
 router.get('/:id', getFertilizerById);
 router.delete('/hapus/:id', authMiddleware, sellerOnly, deleteFertilizer);
+router.put('/add-stock/:id', authMiddleware, sellerOnly, addStock);
 router.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 module.exports = router;

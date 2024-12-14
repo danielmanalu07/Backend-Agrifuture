@@ -101,3 +101,23 @@ exports.deleteFertilizer = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+exports.addStock = async (req, res) => {
+  const { id } = req.params; // ID produk
+  const { addedStock } = req.body; // Jumlah stok yang akan ditambahkan
+
+  if (!addedStock || isNaN(addedStock) || addedStock <= 0) {
+    return res.status(400).json({ message: "Invalid stock value" });
+  }
+
+  try {
+    const success = await addStock(id, parseInt(addedStock, 10));
+    if (!success) {
+      return res.status(404).json({ message: "Fertilizer not found" });
+    }
+
+    res.status(200).json({ message: "Stock updated successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};

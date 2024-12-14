@@ -15,9 +15,9 @@ const createTables = async () => {
         email VARCHAR(255) UNIQUE,
         gender ENUM('male', 'female'),
         profile_pic TEXT,
-        username VARCHAR(50) NOT NULL UNIQUE,
+        username VARCHAR(50) UNIQUE,
         password VARCHAR(255) NOT NULL,
-        role ENUM('admin', 'seller') NOT NULL,
+        role ENUM('admin', 'seller', 'customer') NOT NULL,
         approved BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );

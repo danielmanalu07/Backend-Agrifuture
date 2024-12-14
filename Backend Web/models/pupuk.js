@@ -66,3 +66,23 @@ exports.deleteFertilizer = async (id) => {
   const [result] = await pool.query(query, [id]);
   return result.affectedRows > 0;
 };
+
+//Tambah stok pupuk
+exports.addStock = async (id, addedStock) => {
+  try {
+    const query = `
+      UPDATE fertilizers
+      SET stock = stock + ?
+      WHERE id = ?
+    `;
+    const [result] = await pool.query(query, [addedStock, id]);
+
+    if (result.affectedRows === 0) {
+      throw new Error("Fertilizer not found");
+    }
+
+    return true; // Jika berhasil
+  } catch (err) {
+    throw new Error("Failed to update stock: " + err.message);
+  }
+};
