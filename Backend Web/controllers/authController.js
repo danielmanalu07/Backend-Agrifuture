@@ -96,7 +96,7 @@ exports.logout = (req, res) => {
   try {
     // Verifikasi token
     jwt.verify(token, process.env.JWT_SECRET);
-    
+
     // Jika token valid, proses logout
     res.status(200).json({ message: "Logout successful" });
   } catch (err) {

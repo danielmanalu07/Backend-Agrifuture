@@ -2,7 +2,8 @@ const KategoriPupuk = require('../models/kategoriPupuk');
 
 exports.addKategori = async (req, res) => {
   const { name } = req.body;
-  const imagePath = req.file ? req.file.path : null;
+  // const imagePath = req.file ? req.file.path : null;
+  const imagePath = req.file ? req.file.path.replace(/\\/g, '/') : null;
   const adminId = req.user.id;
 
   try {

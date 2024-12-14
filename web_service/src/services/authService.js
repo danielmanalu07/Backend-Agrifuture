@@ -15,7 +15,7 @@ class AuthService {
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) throw new Error('Invalid Credentials');
 
-        const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES });
+        const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET);
 
         await UserRepository.updateRememberToken(user.id, token);
 

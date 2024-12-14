@@ -5,6 +5,7 @@ const {
   getFertilizerById,
   deleteFertilizer,
 } = require('../models/pupuk');
+const adminModel = require('../models/userModel'); // Importing user model
 
 exports.addFertilizer = async (req, res) => {
   const { name, description, price, category_id, stock } = req.body;
@@ -52,7 +53,16 @@ exports.updateFertilizer = async (req, res) => {
 exports.getAllFertilizers = async (req, res) => {
   try {
     const fertilizers = await getAllFertilizers();
-    res.status(200).json(fertilizers);
+    const dataWithSellers = await Promise.all(
+      fertilizers.map(async (fertilizer) => {
+        const sellers = await adminModel.getSellerById(fertilizer.seller_id);
+        return {
+          ...fertilizer,
+          sellers,
+        };
+      })
+    );
+    res.status(200).json(dataWithSellers);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -65,7 +75,15 @@ exports.getFertilizerById = async (req, res) => {
     if (!fertilizer) {
       return res.status(404).json({ message: 'Fertilizer not found' });
     }
-    res.status(200).json(fertilizer);
+    const seller = await adminModel.getSellerById(fertilizer.seller_id);
+
+    // Menggabungkan data fertilizer dengan data seller
+    const dataWithSeller = {
+      ...fertilizer,
+      seller,
+    };
+
+    res.status(200).json(dataWithSeller);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

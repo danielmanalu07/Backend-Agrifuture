@@ -1,9 +1,9 @@
 // adminRoutes.js
 const express = require('express');
-const { 
-  updateSellerApproval, 
-  getSellerById, 
-  getAllSellers 
+const {
+  updateSellerApproval,
+  getSellerById,
+  getAllSellers
 } = require('../controllers/adminController');
 const { authMiddleware, adminOnly } = require('../middleware/authMiddleware');
 
@@ -13,7 +13,7 @@ const router = express.Router();
 router.put('/approve/seller/:id', authMiddleware, adminOnly, updateSellerApproval);
 
 // Get seller by ID
-router.get('/seller/:id', authMiddleware, adminOnly, getSellerById);
+router.get('/seller/:id', getSellerById);
 
 // Get all sellers
 router.get('/sellers', authMiddleware, adminOnly, getAllSellers);
