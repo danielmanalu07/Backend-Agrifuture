@@ -2,8 +2,8 @@ const KategoriPupuk = require('../models/kategoriPupuk');
 
 exports.addKategori = async (req, res) => {
   const { name } = req.body;
-  // const imagePath = req.file ? req.file.path : null;
-  const imagePath = req.file ? req.file.path.replace(/\\/g, '/') : null;
+  // Menyimpan gambar seperti pada fertilizer
+  const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
   const adminId = req.user.id;
 
   try {
@@ -41,7 +41,8 @@ exports.deleteKategori = async (req, res) => {
 exports.updateKategori = async (req, res) => {
   const { id } = req.params;
   const { name } = req.body;
-  const imagePath = req.file ? req.file.path : null;
+  // Menyimpan gambar seperti pada fertilizer
+  const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
   const adminId = req.user.id;
 
   try {

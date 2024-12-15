@@ -4,6 +4,7 @@ const {
   getAllFertilizers,
   getFertilizerById,
   deleteFertilizer,
+  updateStock 
 } = require('../models/pupuk');
 const adminModel = require('../models/userModel'); // Importing user model
 
@@ -52,17 +53,19 @@ exports.updateFertilizer = async (req, res) => {
 
 exports.getAllFertilizers = async (req, res) => {
   try {
-    const fertilizers = await getAllFertilizers();
-    const dataWithSellers = await Promise.all(
-      fertilizers.map(async (fertilizer) => {
-        const sellers = await adminModel.getSellerById(fertilizer.seller_id);
-        return {
-          ...fertilizer,
-          sellers,
-        };
-      })
-    );
-    res.status(200).json(dataWithSellers);
+    const user = req.user || {}; // Jika tidak ada user, req.user akan undefined
+    const { role, id: seller_id } = user; // Ambil role dan seller_id jika ada
+
+    let fertilizers;
+    if (role === "seller") {
+      // Seller hanya melihat data pupuk miliknya
+      fertilizers = await getAllFertilizers({ seller_id });
+    } else {
+      // Tanpa token, atau role customer/admin melihat semua pupuk
+      fertilizers = await getAllFertilizers();
+    }
+
+    res.status(200).json(fertilizers);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -111,7 +114,7 @@ exports.addStock = async (req, res) => {
   }
 
   try {
-    const success = await addStock(id, parseInt(addedStock, 10));
+    const success = await updateStock(id, parseInt(addedStock, 10)); // Gunakan updateStock dari model
     if (!success) {
       return res.status(404).json({ message: "Fertilizer not found" });
     }
