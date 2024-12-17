@@ -12,6 +12,17 @@ const Cart = {
         }
     },
 
+    async getCartItemByUser(userId) {
+        try {
+            const carts = await this.getCartByUserId(userId);
+            const query = 'SELECT * FROM cart_items WHERE cart_id = ?';
+            const [data] = await pool.query(query, [carts.id]);
+            return data;
+        } catch (error) {
+
+        }
+    },
+
     async addToCart(userId, fertilizerId, quantity, price) {
         try {
             let cart = await this.getCartByUserId(userId);

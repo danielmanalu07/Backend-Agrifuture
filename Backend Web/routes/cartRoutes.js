@@ -7,5 +7,6 @@ const router = express.Router();
 router.post('/addToCart', authMiddleware, customerOnly, cartController.addToCart);
 router.patch('/cart-items/:cartItemId/status', authMiddleware, customerOnly, cartController.updateStatus);
 router.patch('/cart-items/:cartItemId/quantity', authMiddleware, customerOnly, cartController.updateQuantity);
+router.get('/cart-items/myCart', authMiddleware, customerOnly, cartController.getCartItemByUser);
 
 module.exports = router;

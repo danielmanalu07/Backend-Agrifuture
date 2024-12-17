@@ -22,6 +22,30 @@ const Order = {
         }
     },
 
+
+    async getOrderItemByUser(userId) {
+        try {
+            const orders = await this.getActiveOrderByUserId(userId);
+            const query = `
+            SELECT * 
+            FROM order_items 
+            WHERE order_id = ? 
+              AND created_at = (
+                SELECT created_at 
+                FROM order_items 
+                WHERE order_id = ? 
+                ORDER BY created_at DESC 
+                LIMIT 1
+            )
+            ORDER BY created_at;
+        `;
+            const [data] = await pool.query(query, [orders.id, orders.id]);
+            return data;
+        } catch (error) {
+            throw new Error('Could not get order item by user');
+        }
+    },
+
     async getCartItemsByUserId(userId) {
         try {
             const carts = await cartModel.getCartByUserId(userId);
@@ -45,7 +69,6 @@ const Order = {
             // Buat order baru jika tidak ada order aktif
             if (!order) {
                 order = await this.createNewOrder(userId);
-                console.log('New order created:', order);
             }
 
             // Tambahkan item ke order dan hitung total harga

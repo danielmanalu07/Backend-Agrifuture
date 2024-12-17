@@ -38,6 +38,38 @@ class CartController {
         }
     }
 
+    static async getCartItemByUser(req, res) {
+        try {
+            const userId = req.user?.id;
+            if (!userId) {
+                return res.status(401).json({ message: 'Unauthorized: User ID not found' });
+            }
+
+            // Mengambil semua item dari keranjang user
+            const items = await cartModel.getCartItemByUser(userId);
+
+            // Mengambil data pupuk untuk setiap fertilizer_id dalam items
+            const itemsWithFertilizer = await Promise.all(
+                items.map(async (item) => {
+                    const fertilizer = await fertilizerModel.getFertilizerById(item.fertilizer_id);
+                    return {
+                        ...item, // Menyertakan data item
+                        fertilizer: fertilizer, // Menambahkan data pupuk berdasarkan fertilizer_id
+                    };
+                })
+            );
+
+            res.status(200).json({
+                message: 'Items with fertilizers retrieved successfully',
+                items: itemsWithFertilizer,
+            });
+        } catch (error) {
+            console.error('Error:', error);
+            res.status(500).json({ message: 'Internal Server Error' });
+        }
+    }
+
+
     static async updateStatus(req, res) {
         try {
             const { cartItemId } = req.params;
