@@ -47,10 +47,21 @@ exports.updateFertilizer = async (id, data) => {
 };
 
 // Ambil semua pupuk
-exports.getAllFertilizers = async () => {
-  const query = 'SELECT * FROM fertilizers';
-  const [rows] = await pool.query(query);
-  return rows;
+exports.getAllFertilizers = async (filters = {}) => {
+  try {
+    let query = "SELECT * FROM fertilizers";
+    const queryParams = [];
+
+    if (filters.seller_id) {
+      query += " WHERE seller_id = ?";
+      queryParams.push(filters.seller_id);
+    }
+
+    const [rows] = await pool.query(query, queryParams);
+    return rows;
+  } catch (err) {
+    throw new Error("Failed to fetch fertilizers: " + err.message);
+  }
 };
 
 // Ambil pupuk berdasarkan ID
@@ -68,7 +79,7 @@ exports.deleteFertilizer = async (id) => {
 };
 
 //Tambah stok pupuk
-exports.addStock = async (id, addedStock) => {
+exports.updateStock = async (id, addedStock) => {
   try {
     const query = `
       UPDATE fertilizers
@@ -81,7 +92,7 @@ exports.addStock = async (id, addedStock) => {
       throw new Error("Fertilizer not found");
     }
 
-    return true; // Jika berhasil
+    return true;
   } catch (err) {
     throw new Error("Failed to update stock: " + err.message);
   }

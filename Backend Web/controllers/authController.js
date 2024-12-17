@@ -121,14 +121,33 @@ exports.getProfile = async (req, res) => {
     }
 
     const user = users[0];
+    
+    // Calculate the age from birth_date
+    const birthDate = new Date(user.birth_date);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDifference = today.getMonth() - birthDate.getMonth();
+    
+    // If the current month is before the birth month, subtract 1 from the age
+    if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+
+    const profilePicUrl = user.profile_pic
+      ? `${req.protocol}://${req.get('host')}/uploads/${user.profile_pic}`
+      : null;
+
     res.status(200).json({
       username: user.username,
+      name: user.name,
+      store_name: user.store_name,
       email: user.email,
       phone: user.phone,
       address: user.address,
-      age: user.age,
+      age: age, // The calculated age
       gender: user.gender,
-      joinedDate: user.joined_date,
+      joinedDate: user.created_at,
+      profilePic: profilePicUrl,
     });
   } catch (error) {
     console.error("Error fetching profile:", error);

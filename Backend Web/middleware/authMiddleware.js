@@ -2,12 +2,11 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 exports.authMiddleware = (req, res, next) => {
-  const token = req.headers['authorization']?.split(' ')[1];
-
-  console.log("Received Token: ", token); // Log token yang diterima
+  const token = req.headers["authorization"]?.split(" ")[1];
 
   if (!token) {
-    return res.status(401).json({ message: 'No token provided, authorization denied' });
+    // Jika tidak ada token, lanjutkan tanpa req.user
+    return next();
   }
 
   try {
@@ -15,7 +14,7 @@ exports.authMiddleware = (req, res, next) => {
     req.user = decoded;
     next();
   } catch (err) {
-    return res.status(401).json({ message: 'Token is not valid' });
+    return res.status(401).json({ message: "Token is not valid" });
   }
 };
 

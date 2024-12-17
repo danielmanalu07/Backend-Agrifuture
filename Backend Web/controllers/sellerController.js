@@ -6,7 +6,7 @@ const pool = require('../config/database');
 // Update seller profile
 exports.updateSellerProfile = async (req, res) => {
   const { id } = req.user; // Get the seller ID from the token
-  const { name, email, phone, address, password } = req.body;
+  const { name, store_name, email, phone, address, gender, password } = req.body;
   const profilePic = req.file ? req.file.filename : null; // Save filename if a new image is uploaded
 
   try {
@@ -20,18 +20,25 @@ exports.updateSellerProfile = async (req, res) => {
       return res.status(403).json({ message: 'Your account is not approved yet' });
     }
 
-    // If password is provided, hash it, otherwise use the existing password
-    const hashedPassword = password ? await bcrypt.hash(password, 10) : seller.password;
+    // If password is provided, hash it, otherwise keep the current password
+    const hashedPassword = password ? await bcrypt.hash(password, 10) : null;
 
-    // Prepare fields to update
-    const updatedFields = {
-      name: name || seller.name,
-      email: email || seller.email,
-      phone: phone || seller.phone,
-      address: address || seller.address,
-      password: hashedPassword,
-      profile_pic: profilePic || seller.profile_pic
-    };
+    // Prepare fields to update, ensuring only provided fields are updated
+    const updatedFields = {};
+
+    if (name) updatedFields.name = name;
+    if (store_name) updatedFields.store_name = store_name;
+    if (email) updatedFields.email = email;
+    if (phone) updatedFields.phone = phone;
+    if (address) updatedFields.address = address;
+    if (gender) updatedFields.gender = gender;
+    if (hashedPassword) updatedFields.password = hashedPassword;
+    if (profilePic) updatedFields.profile_pic = profilePic;
+
+    // If no fields to update
+    if (Object.keys(updatedFields).length === 0) {
+      return res.status(400).json({ message: 'No fields to update' });
+    }
 
     // Update only the fields that have changed
     await sellerModel.updateProfile(id, updatedFields);
@@ -41,4 +48,3 @@ exports.updateSellerProfile = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
-

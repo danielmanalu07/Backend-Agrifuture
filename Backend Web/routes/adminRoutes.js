@@ -1,5 +1,6 @@
 // adminRoutes.js
 const express = require('express');
+const path = require('path');
 const {
   updateSellerApproval,
   getSellerById,
@@ -13,8 +14,8 @@ const router = express.Router();
 router.put('/approve/seller/:id', authMiddleware, adminOnly, updateSellerApproval);
 
 // Get seller by ID
-router.get('/seller/:id', getSellerById);
-
+router.get('/seller/:id',authMiddleware, getSellerById);
+router.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 // Get all sellers
 router.get('/sellers', authMiddleware, adminOnly, getAllSellers);
 
