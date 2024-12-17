@@ -22,13 +22,98 @@ const Order = {
         }
     },
 
+    async getOrdersBySellerId(sellerId) {
+        try {
+            const query = `
+                SELECT o.id AS order_id, 
+                       o.total_price, 
+                       o.status, 
+                       o.created_at, 
+                       oi.quantity, 
+                       oi.price, 
+                       f.name AS fertilizer_name
+                FROM orders o
+                JOIN order_items oi ON o.id = oi.order_id
+                JOIN fertilizers f ON oi.fertilizer_id = f.id
+                WHERE f.seller_id = ? AND o.status != 'completed'
+                ORDER BY o.created_at DESC;
+            `;
+            const [orders] = await pool.query(query, [sellerId]);
+
+            if (orders.length === 0) {
+                return []; // Jika tidak ada pesanan
+            }
+
+            // Mengembalikan daftar pesanan sesuai format yang diinginkan
+            return orders.map((order) => ({
+                order_id: order.order_id,
+                total_price: order.total_price,
+                status: order.status,
+                created_at: order.created_at,
+                quantity: order.quantity,
+                price: order.price,
+                fertilizer_name: order.fertilizer_name,
+            }));
+        } catch (error) {
+            console.error("Error getting orders by seller ID:", error.message);
+            throw new Error("Could not get orders by seller ID");
+        }
+    },
+
+    async getOrderDetailById(orderId) {
+        try {
+            const query = `
+            SELECT 
+                u.name AS buyer_name, 
+                u.email AS buyer_email, 
+                u.phone AS buyer_phone, 
+                u.address AS buyer_address,
+                f.name AS fertilizer_name,
+                f.image_path AS fertilizer_image,
+                oi.quantity,
+                oi.price,
+                o.total_price,
+                o.status,
+                o.created_at
+            FROM orders o
+                JOIN order_items oi ON o.id = oi.order_id
+                JOIN fertilizers f ON oi.fertilizer_id = f.id
+                JOIN users u ON o.user_id = u.id
+            WHERE o.id = ?;
+          `;
+            const [orderDetails] = await pool.query(query, [orderId]);
+
+            if (orderDetails.length === 0) {
+                return null; // Jika tidak ada detail untuk orderId ini
+            }
+
+            // Mengembalikan hasil yang lebih terstruktur
+            return orderDetails.map((order) => ({
+                buyer_name: order.buyer_name,
+                buyer_email: order.buyer_email,
+                buyer_phone: order.buyer_phone,
+                buyer_address: order.buyer_address,
+                fertilizer_name: order.fertilizer_name,
+                fertilizer_image: order.fertilizer_image, // Foto produk
+                quantity: order.quantity,
+                price: order.price,
+                total_price: order.total_price,
+                status: order.status,
+                created_at: order.created_at,
+            }));
+        } catch (error) {
+            console.error("Error fetching order details:", error.message);
+            throw new Error("Could not get order details");
+        }
+    },
+
 
     async getOrderItemByUser(userId) {
         try {
             const orders = await this.getActiveOrderByUserId(userId);
             const query = `
             SELECT * 
-            FROM order_items 
+            FROM order_items
             WHERE order_id = ? 
               AND created_at = (
                 SELECT created_at 
