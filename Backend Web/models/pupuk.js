@@ -57,7 +57,7 @@ exports.getAllFertilizers = async () => {
 exports.getFertilizerById = async (id) => {
   const query = 'SELECT * FROM fertilizers WHERE id = ?';
   const [rows] = await pool.query(query, [id]);
-  return rows[0];
+  return rows[0] || null;
 };
 
 // Hapus pupuk

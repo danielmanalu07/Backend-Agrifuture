@@ -54,6 +54,57 @@ const createTables = async () => {
 );
     `);
 
+    await pool.query(
+      `CREATE TABLE IF NOT EXISTS carts (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        user_id INT,
+        FOREIGN KEY (user_id) REFERENCES users(id),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      );`
+    )
+
+    await pool.query(
+      `CREATE TABLE IF NOT EXISTS cart_items (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        cart_id INT,
+        fertilizer_id INT,
+        quantity INT NOT NULL,
+        price DECIMAL(10,2) NOT NULL,
+        status BOOLEAN DEFAULT FALSE,
+        FOREIGN KEY (cart_id) REFERENCES carts(id),
+        FOREIGN KEY (fertilizer_id) REFERENCEs fertilizers(id),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      );`
+    )
+
+    await pool.query(
+      `CREATE TABLE IF NOT EXISTS orders (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        user_id INT,
+        FOREIGN KEY (user_id) REFERENCES users(id),
+        total_price DECIMAL(10, 2),
+        status ENUM('pending', 'completed', 'canceled') DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      );`
+    )
+
+    await pool.query(
+      `CREATE TABLE IF NOT EXISTS order_items (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        order_id INT,
+        fertilizer_id INT,
+        quantity INT NOT NULL,
+        price DECIMAL(10,2) NOT NULL,
+        FOREIGN KEY (order_id) REFERENCES orders(id),
+        FOREIGN KEY (fertilizer_id) REFERENCEs fertilizers(id),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      );`
+    )
+
     console.log("Database tables created or already exist.");
   } catch (err) {
     console.error("Error creating tables:", err.message);
