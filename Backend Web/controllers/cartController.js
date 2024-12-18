@@ -1,5 +1,6 @@
 const cartModel = require('../models/cartModel');
 const fertilizerModel = require('../models/pupuk');
+const adminModel = require('../models/userModel');
 
 class CartController {
     static async addToCart(req, res) {
@@ -48,19 +49,30 @@ class CartController {
             // Mengambil semua item dari keranjang user
             const items = await cartModel.getCartItemByUser(userId);
 
-            // Mengambil data pupuk untuk setiap fertilizer_id dalam items
+            // Mengambil data pupuk dan penjual untuk setiap fertilizer_id dalam items
             const itemsWithFertilizer = await Promise.all(
                 items.map(async (item) => {
+                    // Ambil data fertilizer berdasarkan fertilizer_id
                     const fertilizer = await fertilizerModel.getFertilizerById(item.fertilizer_id);
+
+                    // Ambil data seller berdasarkan seller_id dari fertilizer
+                    const seller = await adminModel.getSellerById(fertilizer.seller_id);
+
+                    // Masukkan data seller ke dalam fertilizer
+                    const fertilizerWithSeller = {
+                        ...fertilizer, // Data fertilizer
+                        seller,       // Tambahkan data seller ke dalam fertilizer
+                    };
+
                     return {
-                        ...item, // Menyertakan data item
-                        fertilizer: fertilizer, // Menambahkan data pupuk berdasarkan fertilizer_id
+                        ...item, // Menyertakan data item keranjang
+                        fertilizer: fertilizerWithSeller, // Fertilizer dengan data seller
                     };
                 })
             );
 
             res.status(200).json({
-                message: 'Items with fertilizers retrieved successfully',
+                message: 'Items with fertilizers and sellers retrieved successfully',
                 items: itemsWithFertilizer,
             });
         } catch (error) {
@@ -68,6 +80,7 @@ class CartController {
             res.status(500).json({ message: 'Internal Server Error' });
         }
     }
+
 
 
     static async updateStatus(req, res) {

@@ -1,8 +1,7 @@
-
 const orderModel = require('../models/orderModel');
 const fertilizerModel = require('../models/pupuk');
+const adminModel = require('../models/userModel');
 
-const orderModel = require("../models/orderModel");
 
 class OrderController {
     static async addToOrder(req, res) {
@@ -24,17 +23,11 @@ class OrderController {
                     .status(400)
                     .json({ message: "No items in cart with status true" });
             }
-            console.log("Cart Items : ", cartItems);
 
             const result = await orderModel.addToOrderFromCart(userId, cartItems);
 
             res.status(200).json({
                 message: "Order created successfully",
-                order: {
-                    id: result.orderId,
-                    totalPrice: result.totalPrice,
-                    status: result.orderStatus,
-                },
             });
         } catch (error) {
             console.error("Error creating order:", error);
@@ -115,6 +108,34 @@ class OrderController {
             res.status(200).json(orderDetails);
         } catch (error) {
             console.error("Error fetching order details:", error.message);
+            res.status(500).json({ message: "Internal server error", error: error.message });
+        }
+    }
+
+    static async getOrderPendingByUser(req, res) {
+        try {
+            const userId = req.user?.id;
+            if (!userId) {
+                return res.status(401).json({ message: 'Unauthorized: User ID not found' });
+            }
+
+            const orders = await orderModel.getPendingOrderByUserId(userId);
+
+            const customer = await adminModel.getSellerById(orders.user_id);
+            const dataWithCustomer = {
+                ...orders,
+                customer,
+            };
+
+            if (!orders || orders.length === 0) {
+                return res
+                    .status(404)
+                    .json({ message: "No orders found" });
+            }
+
+            res.status(200).json(dataWithCustomer);
+        } catch (error) {
+            console.error("Error fetching order :", error.message);
             res.status(500).json({ message: "Internal server error", error: error.message });
         }
     }

@@ -12,6 +12,16 @@ const Order = {
         }
     },
 
+    async getPendingOrderByUserId(userId) {
+        try {
+            const query = 'SELECT * FROM orders WHERE user_id = ? AND status = "pending"';
+            const [data] = await pool.query(query, [userId]);
+            return data[0] || null;
+        } catch (error) {
+            throw new Error('Could not get active order by user ID');
+        }
+    },
+
     async createNewOrder(userId) {
         try {
             const createOrderQuery = 'INSERT INTO orders (user_id, total_price, status) VALUES (?, ?, "pending")';
@@ -173,6 +183,15 @@ const Order = {
             // Update total harga pada order
             const updateOrderQuery = 'UPDATE orders SET total_price = ? WHERE id = ?';
             await pool.query(updateOrderQuery, [totalPrice, order.id]);
+
+            const clearCartQuery = `
+            DELETE FROM cart_items 
+            WHERE cart_id = (
+                SELECT id FROM carts WHERE user_id = ?
+            )
+            AND status = true
+        `;
+            await pool.query(clearCartQuery, [userId]);
 
             return { orderId: order.id, totalPrice, orderStatus: order.status };
         } catch (error) {

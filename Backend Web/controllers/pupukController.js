@@ -4,7 +4,7 @@ const {
   getAllFertilizers,
   getFertilizerById,
   deleteFertilizer,
-  updateStock 
+  updateStock
 } = require('../models/pupuk');
 const adminModel = require('../models/userModel'); // Importing user model
 
@@ -62,7 +62,18 @@ exports.getAllFertilizers = async (req, res) => {
       fertilizers = await getAllFertilizers({ seller_id });
     } else {
       // Tanpa token, atau role customer/admin melihat semua pupuk
-      fertilizers = await getAllFertilizers();
+      const allFertilizers = await getAllFertilizers();
+
+      // Tambahkan data seller ke setiap pupuk
+      fertilizers = await Promise.all(
+        allFertilizers.map(async (item) => {
+          const seller = await adminModel.getSellerById(item.seller_id); // Ambil seller berdasarkan seller_id
+          return {
+            ...item,        // Data pupuk
+            seller, // Tambahkan informasi seller
+          };
+        })
+      );
     }
 
     res.status(200).json(fertilizers);
@@ -70,6 +81,7 @@ exports.getAllFertilizers = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
 
 exports.getFertilizerById = async (req, res) => {
   const { id } = req.params;
