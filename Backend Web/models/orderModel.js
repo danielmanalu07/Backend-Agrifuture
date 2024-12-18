@@ -199,6 +199,15 @@ const Order = {
             throw new Error('Could not add items to order');
         }
     },
+
+    async payment({ payment_proof, id, userId }) {
+        const orders = await this.getActiveOrderByUserId(userId);
+        if (!orders) {
+            throw new Error('No active orders found for the user');
+        }
+        const query = 'UPDATE orders SET payment_proof =  COALESCE(?, payment_proof), status = "completed" WHERE id = ? AND user_id = ?';
+        await pool.query(query, [payment_proof, id, userId]);
+    }
 };
 
 module.exports = Order;

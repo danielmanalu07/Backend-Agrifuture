@@ -1,6 +1,8 @@
 const orderModel = require('../models/orderModel');
 const fertilizerModel = require('../models/pupuk');
 const adminModel = require('../models/userModel');
+const path = require('path');
+const fs = require('fs');
 
 
 class OrderController {
@@ -136,6 +138,44 @@ class OrderController {
             res.status(200).json(dataWithCustomer);
         } catch (error) {
             console.error("Error fetching order :", error.message);
+            res.status(500).json({ message: "Internal server error", error: error.message });
+        }
+    }
+
+    static async paymentProof(req, res) {
+        try {
+            const userId = req.user?.id;
+            const { id } = req.params;
+
+            if (!userId) {
+                return res.status(401).json({ message: "Unauthorized: User ID not found" });
+            }
+
+            if (!req.file) {
+                return res.status(400).json({ message: "No file uploaded" });
+            }
+
+            // Path file yang akan disimpan di database
+            const paymentProofPath = `/uploads/payment_proofs/${req.file.filename}`;
+
+            // Update bukti pembayaran di database
+            await orderModel.payment({ payment_proof: paymentProofPath, id, userId });
+
+            res.status(200).json({
+                message: "Payment proof uploaded successfully",
+                payment_proof: paymentProofPath,
+            });
+        } catch (error) {
+            console.error("Error uploading payment proof:", error.message);
+
+            // Hapus file jika terjadi error
+            if (req.file) {
+                const filePath = path.join(__dirname, '../..', req.file.path);
+                if (fs.existsSync(filePath)) {
+                    fs.unlinkSync(filePath);
+                }
+            }
+
             res.status(500).json({ message: "Internal server error", error: error.message });
         }
     }

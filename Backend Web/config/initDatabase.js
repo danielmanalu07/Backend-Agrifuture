@@ -85,6 +85,7 @@ const createTables = async () => {
         user_id INT,
         FOREIGN KEY (user_id) REFERENCES users(id),
         total_price DECIMAL(10, 2),
+        payment_proof varchar(255),
         status ENUM('pending', 'completed', 'canceled') DEFAULT 'pending',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
